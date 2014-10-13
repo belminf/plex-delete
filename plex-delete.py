@@ -1,20 +1,21 @@
 import xml.dom.minidom
 import sys
 import argparse
-import urllib.request as request
-import urllib
-import pprint
+try:
+    import urllib.request as urllib2
+except:
+    import urllib2
 
 def make_url(args, path):
     return("http://{server}:{port}".format(**args) + path)
 
 def get_libraries(args):
-    libary_dom = xml.dom.minidom.parse(request.urlopen(make_url(args,'/library/sections')))
+    libary_dom = xml.dom.minidom.parse(urllib2.urlopen(make_url(args,'/library/sections')))
     libraries = libary_dom.getElementsByTagName('Directory')
     return {l.getAttribute('key'):l.getAttribute('title') for l in libraries}
 
 def get_watched(args, library_id):
-    videos_dom = xml.dom.minidom.parse(request.urlopen(make_url(args,'/library/sections/{library_id}/all?type=4'.format(library_id=library_id))))
+    videos_dom = xml.dom.minidom.parse(urllib2.urlopen(make_url(args,'/library/sections/{library_id}/all?type=4'.format(library_id=library_id))))
     videos = videos_dom.getElementsByTagName('Video')
     return {v.getAttribute('ratingKey'):{
             'show': v.getAttribute('grandparentTitle'),
@@ -24,8 +25,8 @@ def get_watched(args, library_id):
         } for v in videos if v.getAttribute('viewCount')}
 
 def delete_video(args, media_id):
-    opener = request.build_opener(urllib.request.HTTPHandler)
-    this_request = request.Request(make_url(args, '/library/metadata/{0}'.format(media_id)))
+    opener = urllib2.build_opener(urllib2.HTTPHandler)
+    this_request = urllib2.Request(make_url(args, '/library/metadata/{0}'.format(media_id)))
     this_request.get_method = lambda: 'DELETE'
     url = opener.open(this_request)
 
@@ -97,8 +98,8 @@ def main():
 
     args = vars(parser.parse_args())
 
-    if sum(args['list_libraries'], args['list_watched'], args['delete_watched']) != 1:
-        parser.print_help
+    if sum([args['list_libraries'], args['list_watched'], args['delete_watched']]) != 1:
+        parser.print_help()
     elif args['list_libraries']:
         list_libraries(args)
     elif args['list_watched']:
