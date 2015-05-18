@@ -158,7 +158,7 @@ def list_watched(args, target_library):
         print('- {show}: S{season},E{episode}'.format(**show))
 
 
-def delete_watched(args, target_library):
+def delete_watched(args, target_library, force):
     print('')
     shows = collections.defaultdict(list)
     for id, show in sorted(get_watched(args, target_library).items()):
@@ -166,7 +166,7 @@ def delete_watched(args, target_library):
 
     for show, episodes in sorted(shows.items()):
         print('Show: %s' % show)
-        if show in args['config']['always_delete']:
+        if force or show in args['config']['always_delete']:
             print('In always delete list, removing episodes')
             delete_all(args, show, episodes)
             continue
@@ -237,6 +237,13 @@ def main():
         help='delete watched videos'
     )
 
+    group_modify = parser.add_argument_group('modifications')
+    group_modify.add_argument(
+        '--force',
+        action='store_true',
+        help='disregard config and do not confirm deletions'
+    )
+
     args.update(vars(parser.parse_args()))
 
     if sum([args['list_libraries'], args['list_watched'], args['delete_watched']]) != 1:
@@ -245,8 +252,8 @@ def main():
         list_libraries(args)
     elif args['list_watched']:
         list_watched(args, args['target_library'])
-    elif args['delete_watched']:
-        delete_watched(args, args['target_library'])
+    elif args['delete_watched'] or args['force_delete_watched']:
+        delete_watched(args, args['target_library'], args['force'])
     else:
         parser.print_help()
 
