@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from __future__ import print_function
 
@@ -143,7 +143,7 @@ def delete_video(args, media_id):
     this_request.get_method = lambda: 'DELETE'
     try:
         opener.open(this_request)
-    except HTTPError, e:
+    except HTTPError as e:
         if e.code == 403:
             print('')
             print('DELETION ERROR: Client delete disabled on Plex server?')
