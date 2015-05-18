@@ -11,8 +11,10 @@ import json
 
 try:
     import urllib.request as urllib2
+    from urllib.error import HTTPError
 except:
     import urllib2
+    from urllib2 import HTTPError
 
 CONFIG_FILE = os.path.expanduser('~/.plex-delete.json')
 ACTION_MESSAGE = '''
@@ -139,7 +141,15 @@ def delete_video(args, media_id):
     opener = urllib2.build_opener(urllib2.HTTPHandler)
     this_request = urllib2.Request(make_url(args, '/library/metadata/{0}'.format(media_id)))
     this_request.get_method = lambda: 'DELETE'
-    opener.open(this_request)
+    try:
+        opener.open(this_request)
+    except HTTPError, e:
+        if e.code == 403:
+            print('')
+            print('DELETION ERROR: Client delete disabled on Plex server?')
+            sys.exit()
+        raise
+
 
 
 def list_libraries(args):
