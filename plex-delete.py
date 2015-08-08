@@ -246,8 +246,6 @@ def main():
         action='store_true',
         help='delete watched videos'
     )
-
-    group_modify = parser.add_argument_group('modifications')
     group_modify.add_argument(
         '--force',
         action='store_true',
