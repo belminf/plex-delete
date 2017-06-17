@@ -129,7 +129,7 @@ def main():
         help='disregard config and do not confirm deletions'
     )
 
-    args = parser.parse_args()
+    args = vars(parser.parse_args())
 
     if sum([args['list_libraries'], args['list_watched'], args['delete_watched']]) != 1:
         parser.print_help()
