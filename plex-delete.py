@@ -94,6 +94,7 @@ def delete_all(args, show, episodes, interactive=False):
 
     return True
 
+
 def delete_all_interactive(args, show, episodes):
     return delete_all(args, show, episodes, interactive=True)
 
@@ -123,15 +124,15 @@ def make_url(args, path):
 
 
 def get_libraries(args):
-    libary_dom = xml.dom.minidom.parse(urllib2.urlopen(make_url(args,'/library/sections')))
+    libary_dom = xml.dom.minidom.parse(urllib2.urlopen(make_url(args, '/library/sections')))
     libraries = libary_dom.getElementsByTagName('Directory')
-    return {l.getAttribute('key'):l.getAttribute('title') for l in libraries}
+    return {l.getAttribute('key'): l.getAttribute('title') for l in libraries}
 
 
 def get_watched(args, library_id):
-    videos_dom = xml.dom.minidom.parse(urllib2.urlopen(make_url(args,'/library/sections/{library_id}/all?type=4'.format(library_id=library_id))))
+    videos_dom = xml.dom.minidom.parse(urllib2.urlopen(make_url(args, '/library/sections/{library_id}/all?type=4'.format(library_id=library_id))))
     videos = videos_dom.getElementsByTagName('Video')
-    return {v.getAttribute('ratingKey'):{
+    return {v.getAttribute('ratingKey'): {
         'show': v.getAttribute('grandparentTitle'),
         'season': v.getAttribute('parentIndex'),
         'episode': v.getAttribute('index'),
@@ -151,7 +152,6 @@ def delete_video(args, media_id):
             print('DELETION ERROR: Client delete disabled on Plex server?')
             sys.exit()
         raise
-
 
 
 def list_libraries(args):
