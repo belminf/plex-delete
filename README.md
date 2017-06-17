@@ -1,7 +1,7 @@
 # plex-delete
 Uses Plex's HTTP API to delete watched shows.
 
-# Requirement
+# Requirements
 - For delete, assumes you have client deletion enabled:
     1. On Plex, go to `Settings`
     2. Click `Show Advanced`
