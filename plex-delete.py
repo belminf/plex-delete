@@ -117,7 +117,9 @@ ACTION_KEYS = dict(
 
 
 def make_url(args, path):
-    return("http://{server}:{port}".format(**args) + path)
+    composed_url = "http://{server}:{port}".format(**args) + path
+    token_param = 'X-Plex-Token={token}'.format(**args)
+    return ''.join((composed_url, '&' if '?' in composed_url else '?', token_param))
 
 
 def get_libraries(args):
@@ -226,6 +228,13 @@ def main():
         metavar='LIBRARY_ID',
         default='1',
         help='library to target (DEFAULT: 1)'
+    )
+    group_config.add_argument(
+        '--token',
+        '-t',
+        metavar='PLEX_TOKEN',
+        help='Plex token (required, see: https://support.plex.tv/hc/en-us/articles/204059436)',
+        required=True
     )
 
     group_list = parser.add_argument_group('informational')
