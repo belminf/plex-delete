@@ -3,11 +3,8 @@
 from __future__ import print_function
 
 import xml.dom.minidom
-import os
 import sys
 import argparse
-import collections
-import json
 
 try:
     import urllib.request as urllib2
@@ -15,106 +12,6 @@ try:
 except:
     import urllib2
     from urllib2 import HTTPError
-
-CONFIG_FILE = os.path.expanduser('~/.plex-delete.json')
-ACTION_MESSAGE = '''
-Would you like to delete watched episodes from series {show}?
-- (a)lways delete watched files from series {show}
-- (n)ever delete watched files from series {show}
-- (r)emove all {count} watched files from {show}
-- (i)nteractively delete watched files from {show}
-- (s)kip {show} this time
-- (q)uit the program
-'''
-
-
-class SetJsonEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, set):
-            return sorted(obj)
-        return json.JSONEncoder.defaut(self, obj)
-
-
-def read_config(filename):
-    config = {
-        'always_delete': [],
-        'always_ignore': [],
-    }
-
-    if os.path.isfile(filename):
-        with open(filename) as fh:
-            config.update(json.load(fh))
-
-    config['always_delete'] = set(config['always_delete'])
-    config['always_ignore'] = set(config['always_ignore'])
-    return config
-
-
-def write_config(filename, config):
-    with open(filename, 'w') as fh:
-        json.dump(config, fh, cls=SetJsonEncoder)
-
-
-def add_always_delete(args, show, episodes):
-    config = args['config']
-    config['always_delete'].add(show)
-    config['always_ignore'].discard(show)
-    write_config(CONFIG_FILE, config)
-
-    return delete_all(args, show, episodes)
-
-
-def add_always_ignore(args, show, episodes):
-    config = args['config']
-    config['always_ignore'].add(show)
-    config['always_delete'].discard(show)
-    write_config(CONFIG_FILE, config)
-
-    return True
-
-
-def delete_all(args, show, episodes, interactive=False):
-    for id, episode in sorted(episodes):
-        if interactive:
-            key = ''
-            while key not in 'yn':
-                key = raw_input('Remove "{show}" S{season},E{episode}? (y/n)'
-                                .format(**episode)).lower()
-
-        else:
-            key = 'y'
-
-        if key == 'y':
-            print(' - Removing "{show}" S{season},E{episode}...'
-                  .format(**episode))
-            delete_video(args, id)
-        else:
-            print(' - Skipping "{show}" S{season},E{episode}...'
-                  .format(**episode))
-
-    return True
-
-
-def delete_all_interactive(args, show, episodes):
-    return delete_all(args, show, episodes, interactive=True)
-
-
-def skip(args, show, episodes):
-    return True
-
-
-def quit(args, show, episodes):
-    sys.exit(0)
-
-
-ACTION_KEYS = dict(
-    a=add_always_delete,
-    n=add_always_ignore,
-    r=delete_all,
-    i=delete_all_interactive,
-    s=skip,
-    q=quit,
-)
 
 
 def make_url(args, path):
@@ -172,41 +69,12 @@ def list_watched(args, target_library):
 
 def delete_watched(args, target_library, force):
     print('')
-    shows = collections.defaultdict(list)
     for id, show in sorted(get_watched(args, target_library).items()):
-        shows[show['show']].append((id, show))
-
-    for show, episodes in sorted(shows.items()):
-        print('Show: %s' % show)
-        if force or show in args['config']['always_delete']:
-            print('In always delete list, removing episodes')
-            delete_all(args, show, episodes)
-            continue
-
-        elif show in args['config']['always_ignore']:
-            print('In always ignore list, skipping')
-            continue
-
-        for id, episode in episodes:
-            print(' - "{show}" S{season},E{episode}...'.format(**episode))
-
-        print(ACTION_MESSAGE.format(
-            show=show,
-            count=len(episodes),
-        ))
-
-        key = ''
-        while key not in ACTION_KEYS:
-            key = raw_input().lower()
-
-        ACTION_KEYS[key](args, show, episodes)
+        print('Deleting {show}: S{season},E{episode}...'.format(**show))
+        delete_video(args, id)
 
 
 def main():
-    args = dict(
-        config=read_config(CONFIG_FILE),
-    )
-
     parser = argparse.ArgumentParser(
         description='Uses HTTP API to interact with your Plex libraries.')
     group_config = parser.add_argument_group('configuration')
@@ -261,7 +129,7 @@ def main():
         help='disregard config and do not confirm deletions'
     )
 
-    args.update(vars(parser.parse_args()))
+    args = parser.parse_args()
 
     if sum([args['list_libraries'], args['list_watched'], args['delete_watched']]) != 1:
         parser.print_help()
